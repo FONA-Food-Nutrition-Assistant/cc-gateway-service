@@ -27,7 +27,10 @@ export class GatewayService {
 
 			return { status, data };
 		} catch (error) {
-			throw new HttpException(error.message, error.response.status);
+			return {
+				status: error.response.status || 500,
+				data: error.response.data,
+			};
 		}
 	}
 

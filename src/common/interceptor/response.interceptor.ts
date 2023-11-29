@@ -1,7 +1,12 @@
-import { Injectable, NestInterceptor, ExecutionContext, CallHandler } from '@nestjs/common';
+import {
+	Injectable,
+	NestInterceptor,
+	ExecutionContext,
+	CallHandler,
+} from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map, tap } from 'rxjs/operators';
-import { TidyResponse } from 'src/util/responseHelper';
+import { GatewayProxyResponse, TidyResponse } from 'src/util/responseHelper';
 import { FastifyReply } from 'fastify';
 
 @Injectable()
@@ -18,6 +23,10 @@ export class ResponseInterceptor implements NestInterceptor {
 						message: data.message,
 						data: data.data,
 					});
+				} else if (data instanceof GatewayProxyResponse) {
+					const res = context.switchToHttp().getResponse<FastifyReply>();
+					res.header('Content-Type', 'application/json; charset=utf-8');
+					res.status(data.status).send(data.data);
 				}
 			}),
 		);

@@ -2,7 +2,7 @@ import { Controller, Get, HttpStatus, Req } from '@nestjs/common';
 import axios from 'axios';
 import { ResponseMessage } from 'src/common/message/message.enum';
 import { GatewayService } from './gateway.service';
-import { TidyResponse } from 'src/util/responseHelper';
+import { GatewayProxyResponse, TidyResponse } from 'src/util/responseHelper';
 import { FastifyRequest } from 'fastify';
 
 @Controller()
@@ -11,11 +11,18 @@ export class GatewayController {
 
 	@Get('/status')
 	async getStatus(): Promise<TidyResponse> {
-		return new TidyResponse(HttpStatus.OK, ResponseMessage.OK, 'Gateway is running');
+		return new TidyResponse(
+			HttpStatus.OK,
+			ResponseMessage.OK,
+			'Gateway is running',
+		);
 	}
 
 	@Get(':service/*')
-	async routeHandler(@Req() request: FastifyRequest): Promise<any> {
-		return await this.gatewayService.forwardRequest(request);
+	async routeHandler(
+		@Req() request: FastifyRequest & { decodedToken: any },
+	): Promise<GatewayProxyResponse> {
+		const data = await this.gatewayService.forwardRequest(request);
+		return new GatewayProxyResponse(data.status, data.data);
 	}
 }
