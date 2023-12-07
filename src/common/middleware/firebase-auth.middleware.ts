@@ -32,7 +32,7 @@ export class FirebaseAuthMiddleware implements NestMiddleware {
 		try {
 			const decodedToken = await admin.auth().verifyIdToken(token);
 			req['decodedToken'] = decodedToken;
-			req.headers['FONA-CLIENT-UID'] = decodedToken.uid;
+			req.headers['fona-client-uid'] = decodedToken.uid;
 			Logger.log(`[FirebaseAuthMiddleware] ${JSON.stringify(decodedToken)}`);
 
 			next();
