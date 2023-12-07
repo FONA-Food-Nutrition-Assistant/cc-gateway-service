@@ -1,8 +1,9 @@
-import { HttpException, Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import axios, { AxiosRequestConfig } from 'axios';
 import { FastifyRequest } from 'fastify';
 import { FonaService } from 'src/common/interface/global.interface';
 import { getListOfServices } from 'src/util/envHelper';
+import * as https from 'https';
 
 @Injectable()
 export class GatewayService {
@@ -27,9 +28,10 @@ export class GatewayService {
 
 			return { status, data };
 		} catch (error) {
+			Logger.error(`[GatewayService] ${JSON.stringify(error.response.status)}`);
 			return {
-				status: error.response.status || 500,
-				data: error.response.data,
+				status: error.response?.status || 500,
+				data: error.response?.data || error,
 			};
 		}
 	}
@@ -37,12 +39,22 @@ export class GatewayService {
 	private async _createRequest(axiosConfig: AxiosRequestConfig): Promise<any> {
 		const { method, url, params, headers, data } = axiosConfig;
 
+		console.log('url', url);
+
+		const agent = new https.Agent({
+			rejectUnauthorized: false,
+		});
+
+		headers['Content-Type'] = 'application/json';
+		headers['Accept'] = 'application/json';
+
 		return await axios({
 			method,
 			url,
 			params,
 			headers,
 			data,
+			httpsAgent: agent,
 		});
 	}
 }

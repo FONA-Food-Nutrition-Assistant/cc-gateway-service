@@ -1,4 +1,12 @@
-import { Controller, Get, HttpStatus, Req } from '@nestjs/common';
+import {
+	Controller,
+	Get,
+	HttpStatus,
+	Put,
+	Req,
+	Post,
+	Delete,
+} from '@nestjs/common';
 import axios from 'axios';
 import { ResponseMessage } from 'src/common/message/message.enum';
 import { GatewayService } from './gateway.service';
