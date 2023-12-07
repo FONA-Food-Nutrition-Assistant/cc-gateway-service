@@ -56,7 +56,8 @@ FROM node:18-alpine As production
 # Copy the bundled code from the build stage to the production image
 COPY --chown=node:node --from=build /usr/src/app/node_modules ./node_modules
 COPY --chown=node:node --from=build /usr/src/app/dist ./dist
-COPY --chown=node:node --from=build /usr/src/app/serviceAccountKey.json ./serviceAccountKey.json
+# For production purposes, we need to attach the service account key by CI/CD pipeline
+# COPY --chown=node:node --from=build /usr/src/app/serviceAccountKey.json ./serviceAccountKey.json
 
 # Start the server using the production build
 CMD [ "node", "dist/main.js" ]
