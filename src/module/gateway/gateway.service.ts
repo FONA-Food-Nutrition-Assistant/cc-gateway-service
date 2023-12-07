@@ -39,14 +39,16 @@ export class GatewayService {
 	private async _createRequest(axiosConfig: AxiosRequestConfig): Promise<any> {
 		const { method, url, params, headers, data } = axiosConfig;
 
-		console.log('url', url);
-
+		// Create https agent to allow self-signed certificate
+		// TODO: Change this to use certificate from trusted CA
 		const agent = new https.Agent({
 			rejectUnauthorized: false,
 		});
 
-		headers['Content-Type'] = 'application/json';
-		headers['Accept'] = 'application/json';
+		// Rewrite headers to be sent to the target service
+		const targetHost = url.split('/')[2];
+		headers['host'] = targetHost;
+		headers['accept'] = 'application/json';
 
 		return await axios({
 			method,
