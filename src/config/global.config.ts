@@ -1,9 +1,10 @@
+import { Logger } from '@nestjs/common';
 import * as dotenv from 'dotenv';
 
 const envFound = dotenv.config();
 
 if (!envFound || envFound.error) {
-	throw new Error("Couldn't find .env file");
+	Logger.error("Couldn't find .env file");
 }
 
 export default () => ({
