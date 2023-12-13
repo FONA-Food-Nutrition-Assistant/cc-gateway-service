@@ -31,7 +31,6 @@ jobs:
       - name: Deploy to Cloud Run
         env:
           GOOGLE_PROJECT: ${{ secrets.PROJECT_ID }}
-          GATEWAY_APPLICATION_CREDENTIALS: ${{ secrets.GATEWAY_APPLICATION_CREDENTIALS }}
         run: |
           gcloud run deploy ${{ secrets.SERVICE_NAME }} \
           --image="${{ secrets.ARTIFACT_REGISTRY }}/${{ secrets.SERVICE_NAME }}:${{ secrets.SERVICE_VERSION }}" \
@@ -46,7 +45,7 @@ jobs:
                           DB_PASS=${{ secrets.DB_PASS }}@ \
                           REDIS_HOST=${{ secrets.REDIS_HOST }}@ \
                           REDIS_PORT=${{ secrets.REDIS_PORT }}@ \
-                          GATEWAY_APPLICATION_CREDENTIALS=$GOOGLE_PROJECT" \
+                          GATEWAY_APPLICATION_CREDENTIALS=${{ secrets.GATEWAY_APPLICATION_CREDENTIALS }}" \
           --region="${{ secrets.SERVICE_REGION }}" \
           --project="${{ secrets.PROJECT_ID }}"
 
