@@ -33,7 +33,7 @@ jobs:
           GOOGLE_PROJECT: ${{ secrets.PROJECT_ID }}
           SERVICE_ACCOUNT_JSON: ${{ secrets.GATEWAY_APPLICATION_CREDENTIALS }}
         run: |
-          echo "${{ secrets.GATEWAY_APPLICATION_CREDENTIALS }}" | tr -d '\r' > key.json
+          echo -n "${{ secrets.GATEWAY_APPLICATION_CREDENTIALS }}" > key.json
           gcloud auth activate-service-account --key-file=key.json
           gcloud run deploy ${{ secrets.SERVICE_NAME }} \
           --image="${{ secrets.ARTIFACT_REGISTRY }}/${{ secrets.SERVICE_NAME }}:${{ secrets.SERVICE_VERSION }}" \
