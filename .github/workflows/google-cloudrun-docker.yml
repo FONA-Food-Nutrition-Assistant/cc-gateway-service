@@ -31,7 +31,10 @@ jobs:
       - name: Deploy to Cloud Run
         env:
           GOOGLE_PROJECT: ${{ secrets.PROJECT_ID }}
+          SERVICE_ACCOUNT_JSON: ${{ secrets.GATEWAY_APPLICATION_CREDENTIALS }}
         run: |
+          echo "$SERVICE_ACCOUNT_JSON" > key.json
+          gcloud auth activate-service-account --key-file=key.json
           gcloud run deploy ${{ secrets.SERVICE_NAME }} \
           --image="${{ secrets.ARTIFACT_REGISTRY }}/${{ secrets.SERVICE_NAME }}:${{ secrets.SERVICE_VERSION }}" \
           --set-env-vars="^@^NODE_ENV=${{ secrets.SERVICE_ENV }}@ \
@@ -44,8 +47,7 @@ jobs:
                           DB_USER=${{ secrets.DB_USER }}@ \
                           DB_PASS=${{ secrets.DB_PASS }}@ \
                           REDIS_HOST=${{ secrets.REDIS_HOST }}@ \
-                          REDIS_PORT=${{ secrets.REDIS_PORT }}@ \
-                          GATEWAY_APPLICATION_CREDENTIALS=${{ toJSON(secrets.GATEWAY_APPLICATION_CREDENTIALS) }}" \
+                          REDIS_PORT=${{ secrets.REDIS_PORT }}@ \"
           --region="${{ secrets.SERVICE_REGION }}" \
           --project="${{ secrets.PROJECT_ID }}"
 
