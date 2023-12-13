@@ -45,7 +45,7 @@ jobs:
                           DB_PASS=${{ secrets.DB_PASS }}@ \
                           REDIS_HOST=${{ secrets.REDIS_HOST }}@ \
                           REDIS_PORT=${{ secrets.REDIS_PORT }}@ \
-                          GATEWAY_SERVICE_ACCOUNT=${{ secrets.GATEWAY_APPLICATION_CREDENTIALS }}" \
+                          GATEWAY_SERVICE_ACCOUNT=${{ fromJson(secrets.GATEWAY_APPLICATION_CREDENTIALS) }}" \
           --region="${{ secrets.SERVICE_REGION }}" \
           --project="${{ secrets.PROJECT_ID }}"
 
