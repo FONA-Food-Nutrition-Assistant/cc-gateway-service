@@ -38,8 +38,9 @@ jobs:
           cat key.json
 
       - name: Fix Line Endings in JSON
-          run: |
-            sed -i 's/\r$//' key.json
+        run: |
+          escaped_json=$(echo "${{ secrets.GATEWAY_APPLICATION_CREDENTIALS }}" | sed 's/"/\\"/g')
+          printf "%s" "$escaped_json" > key.json
 
       - name: Deploy to Cloud Run
         env:
