@@ -37,6 +37,10 @@ jobs:
         run: |
           cat key.json
 
+      - name: Fix Line Endings in JSON
+          run: |
+            sed -i 's/\r$//' key.json
+
       - name: Deploy to Cloud Run
         env:
           GOOGLE_PROJECT: ${{ secrets.PROJECT_ID }}
