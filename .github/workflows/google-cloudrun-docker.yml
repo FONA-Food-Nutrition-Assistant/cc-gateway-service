@@ -37,17 +37,15 @@ jobs:
         run: |
           cat key.json
 
-      - name: Fix Line Endings in JSON
-        run: |
-          escaped_json=$(echo "${{ secrets.GATEWAY_APPLICATION_CREDENTIALS }}" | sed 's/"/\\"/g')
-          printf "%s" "$escaped_json" > key.json
+      - name: Write Service Account JSON to file
+        run: echo "${{ secrets.GATEWAY_APPLICATION_CREDENTIALS }}" > key.json
 
       - name: Deploy to Cloud Run
         env:
+          GOOGLE_APPLICATION_CREDENTIALS: ./key.json
           GOOGLE_PROJECT: ${{ secrets.PROJECT_ID }}
-          SERVICE_ACCOUNT_JSON: ${{ secrets.GATEWAY_APPLICATION_CREDENTIALS }}
         run: |
-          gcloud auth activate-service-account --key-file=key.json
+          gcloud auth activate-service-account --key-file=./key.json
           gcloud run deploy ${{ secrets.SERVICE_NAME }} \
           --image="${{ secrets.ARTIFACT_REGISTRY }}/${{ secrets.SERVICE_NAME }}:${{ secrets.SERVICE_VERSION }}" \
           --set-env-vars="^@^NODE_ENV=${{ secrets.SERVICE_ENV }}@ \
