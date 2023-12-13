@@ -14,6 +14,8 @@ import { FastifyReply } from 'fastify';
 @Catch()
 export class AllExceptionsFilter extends BaseExceptionFilter {
 	catch(exception: any, host: ArgumentsHost): void {
+		Logger.error(`[AllExceptionsFilter] ${JSON.stringify(exception)}`);
+
 		const ctx = host.switchToHttp();
 		const response: FastifyReply = ctx.getResponse();
 		const request = ctx.getRequest();

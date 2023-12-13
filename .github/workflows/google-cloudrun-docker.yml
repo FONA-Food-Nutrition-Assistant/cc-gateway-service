@@ -1,0 +1,48 @@
+name: Deploy Gateway Service to Cloud Run
+
+on:
+  push:
+    branches:
+      - 'staging'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code checkout
+        uses: actions/checkout@v2
+
+      - name: Install the gcloud CLI
+        uses: google-github-actions/setup-gcloud@v0
+        with:
+          project_id: ${{ secrets.PROJECT_ID }}
+          service_account_key: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS }}
+          install_components: 'gke-gcloud-auth-plugin'
+          export_default_credentials: true
+
+      - name: Build and Push the Docker Image
+        env:
+          GOOGLE_PROJECT: ${{ secrets.PROJECT_ID }}
+        run: |
+          gcloud auth configure-docker ${{ secrets.GOOGLE_AUTH }}
+          docker build -t ${{ secrets.ARTIFACT_REGISTRY }}/${{ secrets.SERVICE_NAME }} .
+          docker push ${{ secrets.ARTIFACT_REGISTRY }}/${{ secrets.SERVICE_NAME }}
+
+      - name: Deploy to Cloud Run
+        env:
+          GOOGLE_PROJECT: ${{ secrets.PROJECT_ID }}
+          GATEWAY_SERVICE_ACCOUNT: ${{ secrets.GATEWAY_APPLICATION_CREDENTIALS }}
+        run: |
+          gcloud run deploy ${{ secrets.SERVICE_NAME }} --image="${{ secrets.ARTIFACT_REGISTRY }}/${{ secrets.SERVICE_NAME }}:${{ secrets.SERVICE_VERSION }}" --set-env-vars="NODE_ENV=${{ secrets.SERVICE_ENV }}" --set-env-vars="APP_HOST=${{ secrets.SERVICE_HOST }}" --set-env-vars="APP_PORT=${{ secrets.SERVICE_PORT }}" --set-env-vars="APP_PREFIX=${{ secrets.SERVICE_PREFIX }}" --set-env-vars="DB_HOST=${{ secrets.DB_HOST }}" --set-env-vars="DB_PORT=${{ secrets.DB_PORT }}" --set-env-vars="DB_NAME=${{ secrets.DB_NAME }}" --set-env-vars="DB_USER=${{ secrets.DB_USER }}" --set-env-vars="DB_PASS=${{ secrets.DB_PASS }}" --set-env-vars="REDIS_HOST=${{ secrets.REDIS_HOST }}" --set-env-vars="REDIS_PORT=${{ secrets.REDIS_PORT }}" --region="${{ secrets.SERVICE_REGION }}" --project="${{ secrets.PROJECT_ID }}"
+
+      - name: Update Cloud Run Traffic
+        env:
+          GOOGLE_PROJECT: ${{ secrets.PROJECT_ID }}
+        run: |
+          gcloud run services update-traffic ${{ secrets.SERVICE_NAME }} --region="${{ secrets.SERVICE_REGION }}" --to-latest
+
+      - name: Push to Discord Webhook
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          IFS=$' \t\r\n' curl -H "Content-Type: application/json" -X POST -d '{"username": "${{ secrets.DISCORD_WEBHOOK_USERNAME }}","avatar_url": "${{ secrets.DISCORD_WEBHOOK_AVATAR_URL }}","embeds": [{"title": "Service Deployed: '${{ secrets.SERVICE_NAME }}'","description": "Service '${{ secrets.SERVICE_NAME }}' has been updated to the latest revision\nTraffic has been routed to the latest revision\n\n**Project ID**: `'${{ secrets.PROJECT_ID }}'`\n**NODE_ENV**: `'${{ secrets.SERVICE_ENV }}'`\n**APP_HOST**: `'${{ secrets.SERVICE_HOST }}'`\n**APP_PORT**: `'${{ secrets.SERVICE_PORT }}'`\n**APP_PREFIX**: `'${{ secrets.SERVICE_PREFIX }}'`\n**DB_HOST**: `'${{ secrets.DB_HOST }}'`\n**DB_PORT**: `'${{ secrets.DB_PORT }}'`\n**DB_NAME**: `'${{ secrets.DB_NAME }}'`\n**DB_USER**: `'${{ secrets.DB_USER }}'`\n**REDIS_HOST**: `'${{ secrets.REDIS_HOST }}'`\n**REDIS_PORT**: `'${{ secrets.REDIS_PORT }}'`\n", "color": 65280}]}' '${{ secrets.DISCORD_WEBHOOK_URL }}'
