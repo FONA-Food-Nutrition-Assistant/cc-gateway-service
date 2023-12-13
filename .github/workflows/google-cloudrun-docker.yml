@@ -28,24 +28,10 @@ jobs:
           docker build -t ${{ secrets.ARTIFACT_REGISTRY }}/${{ secrets.SERVICE_NAME }} .
           docker push ${{ secrets.ARTIFACT_REGISTRY }}/${{ secrets.SERVICE_NAME }}
 
-      - name: Prepare Service Account JSON
-        id: prepare_json
-        run: |
-          echo "${{ secrets.GATEWAY_APPLICATION_CREDENTIALS }}" | sed 's/"/\\"/g' > key.json
-
-      - name: Debug Service Account Content
-        run: |
-          cat key.json
-
-      - name: Write Service Account JSON to file
-        run: echo "${{ secrets.GATEWAY_APPLICATION_CREDENTIALS }}" > key.json
-
       - name: Deploy to Cloud Run
         env:
-          GOOGLE_APPLICATION_CREDENTIALS: ./key.json
           GOOGLE_PROJECT: ${{ secrets.PROJECT_ID }}
         run: |
-          gcloud auth activate-service-account ${{ secrets.GATEWAY_APPLICATION_CREDENTIALS_ACCOUNT}} --key-file=./key.json --project=$GOOGLE_PROJECT
           gcloud run deploy ${{ secrets.SERVICE_NAME }} \
           --image="${{ secrets.ARTIFACT_REGISTRY }}/${{ secrets.SERVICE_NAME }}:${{ secrets.SERVICE_VERSION }}" \
           --set-env-vars="^@^NODE_ENV=${{ secrets.SERVICE_ENV }}@ \
@@ -58,7 +44,8 @@ jobs:
                           DB_USER=${{ secrets.DB_USER }}@ \
                           DB_PASS=${{ secrets.DB_PASS }}@ \
                           REDIS_HOST=${{ secrets.REDIS_HOST }}@ \
-                          REDIS_PORT=${{ secrets.REDIS_PORT }}@ \"
+                          REDIS_PORT=${{ secrets.REDIS_PORT }}@ \
+                          GATEWAY_SERVICE_ACCOUNT=${{ fromJson(secrets.GATEWAY_APPLICATION_CREDENTIALS) }}" \
           --region="${{ secrets.SERVICE_REGION }}" \
           --project="${{ secrets.PROJECT_ID }}"
 
