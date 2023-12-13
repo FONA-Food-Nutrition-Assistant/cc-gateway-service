@@ -31,13 +31,12 @@ jobs:
       - name: Prepare Service Account JSON
         id: prepare_json
         run: |
-          echo "${{ secrets.GATEWAY_APPLICATION_CREDENTIALS }}"
+          echo "${{ fromJson(secrets.GATEWAY_APPLICATION_CREDENTIALS)}}"
 
       - name: Deploy to Cloud Run
         env:
           GOOGLE_PROJECT: ${{ secrets.PROJECT_ID }}
         run: |
-          echo GATEWAY_APPLICATION_CREDENTIALS=${{ secrets.GATEWAY_APPLICATION_CREDENTIALS }} >> .env
           gcloud run deploy ${{ secrets.SERVICE_NAME }} \
           --image="${{ secrets.ARTIFACT_REGISTRY }}/${{ secrets.SERVICE_NAME }}:${{ secrets.SERVICE_VERSION }}" \
           --set-env-vars="^@^NODE_ENV=${{ secrets.SERVICE_ENV }}@ \
@@ -51,6 +50,7 @@ jobs:
                           DB_PASS=${{ secrets.DB_PASS }}@ \
                           REDIS_HOST=${{ secrets.REDIS_HOST }}@ \
                           REDIS_PORT=${{ secrets.REDIS_PORT }}@ \
+                          GATEWAY_SERVICE_ACCOUNT=${{ fromJson(secrets.GATEWAY_APPLICATION_CREDENTIALS) }}" \
           --region="${{ secrets.SERVICE_REGION }}" \
           --project="${{ secrets.PROJECT_ID }}"
 
