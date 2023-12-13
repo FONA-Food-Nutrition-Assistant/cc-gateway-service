@@ -34,7 +34,7 @@ jobs:
         run: |
           gcloud run deploy ${{ secrets.SERVICE_NAME }} \
           --image="${{ secrets.ARTIFACT_REGISTRY }}/${{ secrets.SERVICE_NAME }}:${{ secrets.SERVICE_VERSION }}" \
-          --env-vars-file=env-vars.yaml \
+          --env-vars-file=./env-vars.yaml \
           --region="${{ secrets.SERVICE_REGION }}" \
           --project="${{ secrets.PROJECT_ID }}"
 
