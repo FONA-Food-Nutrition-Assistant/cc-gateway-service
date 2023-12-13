@@ -32,7 +32,22 @@ jobs:
         env:
           GOOGLE_PROJECT: ${{ secrets.PROJECT_ID }}
         run: |
-          gcloud run deploy ${{ secrets.SERVICE_NAME }} --image="${{ secrets.ARTIFACT_REGISTRY }}/${{ secrets.SERVICE_NAME }}:${{ secrets.SERVICE_VERSION }}" --set-env-vars="NODE_ENV=${{ secrets.SERVICE_ENV }}" --set-env-vars="APP_HOST=${{ secrets.SERVICE_HOST }}" --set-env-vars="APP_PORT=${{ secrets.SERVICE_PORT }}" --set-env-vars="APP_PREFIX=${{ secrets.SERVICE_PREFIX }}" --set-env-vars="DB_HOST=${{ secrets.DB_HOST }}" --set-env-vars="DB_PORT=${{ secrets.DB_PORT }}" --set-env-vars="DB_NAME=${{ secrets.DB_NAME }}" --set-env-vars="DB_USER=${{ secrets.DB_USER }}" --set-env-vars="DB_PASS=${{ secrets.DB_PASS }}" --set-env-vars="REDIS_HOST=${{ secrets.REDIS_HOST }}" --set-env-vars="REDIS_PORT=${{ secrets.REDIS_PORT }}" --set-env-vars="GATEWAY_APPLICATION_CREDENTIALS=${{ secrets.GATEWAY_APPLICATION_CREDENTIALS }}" --region="${{ secrets.SERVICE_REGION }}" --project="${{ secrets.PROJECT_ID }}"
+          gcloud run deploy ${{ secrets.SERVICE_NAME }} \
+          --image="${{ secrets.ARTIFACT_REGISTRY }}/${{ secrets.SERVICE_NAME }}:${{ secrets.SERVICE_VERSION }}" \
+          --set-env-vars="NODE_ENV=${{ secrets.SERVICE_ENV }}, \
+                          APP_HOST=${{ secrets.SERVICE_HOST }}, \
+                          APP_PORT=${{ secrets.SERVICE_PORT }}, \
+                          APP_PREFIX=${{ secrets.SERVICE_PREFIX }}, \
+                          DB_HOST=${{ secrets.DB_HOST }}, \
+                          DB_PORT=${{ secrets.DB_PORT }}, \
+                          DB_NAME=${{ secrets.DB_NAME }}, \
+                          DB_USER=${{ secrets.DB_USER }}, \
+                          DB_PASS=${{ secrets.DB_PASS }}, \
+                          REDIS_HOST=${{ secrets.REDIS_HOST }}, \
+                          REDIS_PORT=${{ secrets.REDIS_PORT }}, \
+                          GATEWAY_APPLICATION_CREDENTIALS=${{ secrets.GATEWAY_APPLICATION_CREDENTIALS }}" \
+          --region="${{ secrets.SERVICE_REGION }}" \
+          --project="${{ secrets.PROJECT_ID }}"
 
       - name: Update Cloud Run Traffic
         env:
