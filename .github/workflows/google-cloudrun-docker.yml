@@ -28,11 +28,6 @@ jobs:
           docker build -t ${{ secrets.ARTIFACT_REGISTRY }}/${{ secrets.SERVICE_NAME }} .
           docker push ${{ secrets.ARTIFACT_REGISTRY }}/${{ secrets.SERVICE_NAME }}
 
-      - name: Prepare Service Account JSON
-        id: prepare_json
-        run: |
-          echo "${{ fromJson(secrets.GATEWAY_APPLICATION_CREDENTIALS)}}"
-
       - name: Deploy to Cloud Run
         env:
           GOOGLE_PROJECT: ${{ secrets.PROJECT_ID }}
