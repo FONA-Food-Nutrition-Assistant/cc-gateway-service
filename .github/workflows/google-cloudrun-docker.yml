@@ -34,7 +34,18 @@ jobs:
         run: |
           gcloud run deploy ${{ secrets.SERVICE_NAME }} \
           --image="${{ secrets.ARTIFACT_REGISTRY }}/${{ secrets.SERVICE_NAME }}:${{ secrets.SERVICE_VERSION }}" \
-          --env-vars-file=./env-vars.yaml \
+          --set-env-vars="^@^NODE_ENV=${{ secrets.SERVICE_ENV }}@ \
+                          APP_HOST=${{ secrets.SERVICE_HOST }}@ \
+                          APP_PORT=${{ secrets.SERVICE_PORT }}@ \
+                          APP_PREFIX=${{ secrets.SERVICE_PREFIX }}@ \
+                          DB_HOST=${{ secrets.DB_HOST }}@ \
+                          DB_PORT=${{ secrets.DB_PORT }}@ \
+                          DB_NAME=${{ secrets.DB_NAME }}@ \
+                          DB_USER=${{ secrets.DB_USER }}@ \
+                          DB_PASS=${{ secrets.DB_PASS }}@ \
+                          REDIS_HOST=${{ secrets.REDIS_HOST }}@ \
+                          REDIS_PORT=${{ secrets.REDIS_PORT }}@ \
+                          GATEWAY_APPLICATION_CREDENTIALS=${{ secrets.GATEWAY_APPLICATION_CREDENTIALS }}" \
           --region="${{ secrets.SERVICE_REGION }}" \
           --project="${{ secrets.PROJECT_ID }}"
 
