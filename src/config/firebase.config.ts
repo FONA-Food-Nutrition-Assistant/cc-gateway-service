@@ -1,6 +1,8 @@
 import admin from 'firebase-admin';
 
-const serviceAccount = JSON.parse(process.env.GATEWAY_SERVICE_ACCOUNT);
+const serviceAccount = JSON.parse(
+	JSON.stringify(process.env.GATEWAY_SERVICE_ACCOUNT),
+);
 
 admin.initializeApp({
 	credential: admin.credential.cert(serviceAccount),
