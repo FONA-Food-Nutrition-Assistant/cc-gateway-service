@@ -18,8 +18,6 @@ const data = {
 	universe_domain: process.env.GOOGLE_APPLICATION_CREDENTIALS_UNIVERSE_DOMAIN,
 };
 
-// fs.writeFileSync('./../../serviceAccountKeyGithub.json', JSON.stringify(data));
-
 fs.writeFileSync(
 	__dirname + '/../../serviceAccountGithub.json',
 	JSON.stringify(data, null),
