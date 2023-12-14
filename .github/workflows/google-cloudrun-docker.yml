@@ -28,12 +28,6 @@ jobs:
           docker build -t ${{ secrets.ARTIFACT_REGISTRY }}/${{ secrets.SERVICE_NAME }} .
           docker push ${{ secrets.ARTIFACT_REGISTRY }}/${{ secrets.SERVICE_NAME }}
 
-      - name: Build and Push the Docker Image
-        env:
-          GOOGLE_PROJECT: ${{ secrets.PROJECT_ID }}
-        run: |
-          echo ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_PROJECT_ID }}
-
       - name: Deploy to Cloud Run
         env:
           GOOGLE_PROJECT: ${{ secrets.PROJECT_ID }}
@@ -51,7 +45,17 @@ jobs:
                           DB_PASS=${{ secrets.DB_PASS }}@ \
                           REDIS_HOST=${{ secrets.REDIS_HOST }}@ \
                           REDIS_PORT=${{ secrets.REDIS_PORT }}@ \
-                          GATEWAY_SERVICE_ACCOUNT=${{ secrets.GATEWAY_APPLICATION_CREDENTIALS }}" \
+                          GOOGLE_APPLICATION_CREDENTIALS_TYPE=${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_TYPE }}@ \
+                          GOOGLE_APPLICATION_CREDENTIALS_PROJECT_ID=${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_PROJECT_ID }}@ \
+                          GOOGLE_APPLICATION_CREDENTIALS_PRIVATE_KEY_ID=${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_PRIVATE_KEY_ID }}@ \
+                          GOOGLE_APPLICATION_CREDENTIALS_PRIVATE_KEY=${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_PRIVATE_KEY }}@ \
+                          GOOGLE_APPLICATION_CREDENTIALS_CLIENT_EMAIL=${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_CLIENT_EMAIL }}@ \
+                          GOOGLE_APPLICATION_CREDENTIALS_CLIENT_ID=${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_CLIENT_ID }}@ \
+                          GOOGLE_APPLICATION_CREDENTIALS_AUTH_URI=${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_AUTH_URI }}@ \
+                          GOOGLE_APPLICATION_CREDENTIALS_TOKEN_URI=${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_TOKEN_URI }}@ \
+                          GOOGLE_APPLICATION_CREDENTIALS_AUTH_PROVIDER=${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_AUTH_PROVIDER }}@ \
+                          GOOGLE_APPLICATION_CREDENTIALS_CLIENT_CERT_URL=${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_CLIENT_CERT_URL }}@ \
+                          GOOGLE_APPLICATION_CREDENTIALS_UNIVERSE_DOMAIN=${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_UNIVERSE_DOMAIN }}@" \
           --region="${{ secrets.SERVICE_REGION }}" \
           --project="${{ secrets.PROJECT_ID }}"
 
