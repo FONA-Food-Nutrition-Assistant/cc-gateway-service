@@ -48,3 +48,4 @@ lerna-debug.log*
 
 # Google service account key
 serviceAccountKey.json
+serviceAccountGithub.json
