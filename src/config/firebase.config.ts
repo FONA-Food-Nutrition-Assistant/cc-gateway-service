@@ -18,15 +18,21 @@ const data = {
 	universe_domain: process.env.GOOGLE_APPLICATION_CREDENTIALS_UNIVERSE_DOMAIN,
 };
 
-fs.writeFile('./serviceAccountKeyGithub.json', JSON.stringify(data), error => {
-	if (error) {
-		console.log('An error has occurred ', error);
-		return;
-	}
-	console.log('Data written successfully to disk');
-});
+// fs.writeFileSync('./../../serviceAccountKeyGithub.json', JSON.stringify(data));
 
-const serviceAccount = require(__dirname + '/../../serviceAccountKey.json');
+fs.writeFileSync(
+	__dirname + '/../../serviceAccountGithub.json',
+	JSON.stringify(data, null),
+	error => {
+		if (error) {
+			console.log('An error has occurred ', error);
+			return;
+		}
+		console.log('Data written successfully to disk');
+	},
+);
+
+const serviceAccount = require(__dirname + '/../../serviceAccountGithub.json');
 
 admin.initializeApp({
 	credential: admin.credential.cert(serviceAccount),
