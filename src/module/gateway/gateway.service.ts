@@ -5,6 +5,7 @@ import { FonaService } from 'src/common/interface/global.interface';
 import { getListOfServices } from 'src/util/envHelper';
 import * as https from 'https';
 import { ResponseMessage } from 'src/common/message/message.enum';
+import { MemoryStorageFile } from '@blazity/nest-file-fastify';
 
 @Injectable()
 export class GatewayService {
@@ -12,6 +13,50 @@ export class GatewayService {
 
 	constructor() {
 		this.services = getListOfServices();
+	}
+
+	async forwardRequestContainImage(
+		request: FastifyRequest,
+		image: MemoryStorageFile,
+	): Promise<any> {
+		try {
+			const service = this.services.find(
+				s => s.prefix === process.env.FONA_SERVICE_IDENTIFICATION_PREFIX,
+			);
+			if (!service)
+				throw new HttpException(
+					ResponseMessage.ERR_NOT_FOUND,
+					HttpStatus.NOT_FOUND,
+				);
+
+			const formData = new FormData();
+
+			for (const [key, value] of Object.entries(request.body)) {
+				formData.append(key, value);
+			}
+
+			const blobImage = new Blob([image.buffer], { type: image.mimetype });
+
+			formData.append('image', blobImage, image.fieldname);
+
+			const { status, data } = await this._createRequest({
+				method: request.method,
+				url: `${service.url}/${request.params['*']}`,
+				params: request.query,
+				headers: request.headers,
+				data: formData,
+			});
+
+			return { status, data };
+		} catch (error) {
+			Logger.error(
+				`[GatewayService] ${JSON.stringify(error.response?.status)}`,
+			);
+			return {
+				status: error.response?.status || 500,
+				data: error.response?.data || error,
+			};
+		}
 	}
 
 	async forwardRequest(request: FastifyRequest): Promise<any> {
