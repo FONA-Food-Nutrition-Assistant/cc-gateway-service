@@ -45,3 +45,7 @@ lerna-debug.log*
 /.sass-cache
 /coverage
 /npm-debug.log
+
+# Google service account key
+serviceAccountKey.json
+serviceAccountGithub.json
