@@ -7,13 +7,14 @@ import {
 import { Logger } from '@nestjs/common';
 import { AllExceptionsFilter } from './common/filter/exception.filter';
 import { ConfigService } from '@nestjs/config';
+import multiPart from '@fastify/multipart';
 
 async function bootstrap() {
 	try {
 		const env = process.env.NODE_ENV || 'development';
 		const app = await NestFactory.create<NestFastifyApplication>(
 			AppModule,
-			new FastifyAdapter(),
+			new FastifyAdapter({ maxParamLength: 1000, bodyLimit: 30 * 1024 * 1024 }),
 			{
 				logger:
 					env === 'production'
@@ -21,6 +22,8 @@ async function bootstrap() {
 						: ['warn', 'error', 'debug', 'log', 'verbose'],
 			},
 		);
+
+		app.register(multiPart);
 
 		const configService = app.get(ConfigService);
 
