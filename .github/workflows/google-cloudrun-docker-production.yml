@@ -1,0 +1,80 @@
+name: Production | Deploy Gateway Service to Cloud Run
+
+on:
+  push:
+    branches:
+      - 'main'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Code checkout
+        uses: actions/checkout@v2
+
+      - name: Install the gcloud CLI
+        uses: google-github-actions/setup-gcloud@v0
+        with:
+          project_id: ${{ secrets.PROJECT_ID_PROD }}
+          service_account_key: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_PROD }}
+          install_components: 'gke-gcloud-auth-plugin'
+          export_default_credentials: true
+
+      - name: Build and Push the Docker Image
+        env:
+          GOOGLE_PROJECT: ${{ secrets.PROJECT_ID_PROD }}
+        run: |
+          gcloud auth configure-docker ${{ secrets.GOOGLE_AUTH }}
+          docker build -t ${{ secrets.ARTIFACT_REGISTRY_PROD }}/${{ secrets.SERVICE_NAME }} .
+          docker push ${{ secrets.ARTIFACT_REGISTRY_PROD }}/${{ secrets.SERVICE_NAME }}
+
+      - name: Deploy to Cloud Run
+        env:
+          GOOGLE_PROJECT: ${{ secrets.PROJECT_ID_PROD }}
+          SERVICE_VERSION: ${{ secrets.SERVICE_VERSION }}
+          SERVICE_ENV: ${{ secrets.SERVICE_ENV_PROD }}
+          SERVICE_HOST: ${{ secrets.SERVICE_HOST }}
+          SERVICE_PORT: ${{ secrets.SERVICE_PORT }}
+          SERVICE_PREFIX: ${{ secrets.SERVICE_PREFIX }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+          DB_PORT: ${{ secrets.DB_PORT }}
+          DB_NAME: ${{ secrets.DB_NAME_PROD }}
+          DB_USER: ${{ secrets.DB_USER }}
+          DB_PASS: ${{ secrets.DB_PASS }}
+          REDIS_HOST: ${{ secrets.REDIS_HOST }}
+          REDIS_PORT: ${{ secrets.REDIS_PORT }}
+          GOOGLE_APPLICATION_CREDENTIALS_TYPE: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_TYPE }}
+          GOOGLE_APPLICATION_CREDENTIALS_PROJECT_ID: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_PROJECT_ID }}
+          GOOGLE_APPLICATION_CREDENTIALS_PRIVATE_KEY_ID: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_PRIVATE_KEY_ID }}
+          GOOGLE_APPLICATION_CREDENTIALS_PRIVATE_KEY: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_PRIVATE_KEY }}
+          GOOGLE_APPLICATION_CREDENTIALS_CLIENT_EMAIL: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_CLIENT_EMAIL }}
+          GOOGLE_APPLICATION_CREDENTIALS_CLIENT_ID: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_CLIENT_ID }}
+          GOOGLE_APPLICATION_CREDENTIALS_AUTH_URI: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_AUTH_URI }}
+          GOOGLE_APPLICATION_CREDENTIALS_TOKEN_URI: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_TOKEN_URI }}
+          GOOGLE_APPLICATION_CREDENTIALS_AUTH_PROVIDER: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_AUTH_PROVIDER }}
+          GOOGLE_APPLICATION_CREDENTIALS_CLIENT_CERT_URL: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_CLIENT_CERT_URL }}
+          GOOGLE_APPLICATION_CREDENTIALS_UNIVERSE_DOMAIN: ${{ secrets.GOOGLE_APPLICATION_CREDENTIALS_UNIVERSE_DOMAIN }}
+          FONA_SERVICE_USER_PREFIX: ${{ secrets.FONA_SERVICE_USER_PREFIX }}
+          FONA_SERVICE_USER_URL: ${{ secrets.FONA_SERVICE_USER_URL }}
+          FONA_SERVICE_FOOD_PREFIX: ${{ secrets.FONA_SERVICE_FOOD_PREFIX }}
+          FONA_SERVICE_FOOD_URL: ${{ secrets.FONA_SERVICE_FOOD_URL }}
+          FONA_SERVICE_IDENTIFICATION_PREFIX: ${{ secrets.FONA_SERVICE_IDENTIFICATION_PREFIX }}
+          FONA_SERVICE_IDENTIFICATION_URL: ${{ secrets.FONA_SERVICE_IDENTIFICATION_URL }}
+
+        run: |
+          gcloud run deploy ${{ secrets.SERVICE_NAME }} \
+          --image="${{ secrets.ARTIFACT_REGISTRY_PROD }}/${{ secrets.SERVICE_NAME }}:${{ secrets.SERVICE_VERSION }}" \
+          --set-env-vars="NODE_ENV=${SERVICE_ENV},APP_HOST=${SERVICE_HOST},APP_PORT=${SERVICE_PORT},APP_PREFIX=${SERVICE_PREFIX},DB_HOST=${DB_HOST},DB_PORT=${DB_PORT},DB_NAME=${DB_NAME},DB_USER=${DB_USER},DB_PASS=${DB_PASS},REDIS_HOST=${REDIS_HOST},REDIS_PORT=${REDIS_PORT},GOOGLE_APPLICATION_CREDENTIALS_TYPE=${GOOGLE_APPLICATION_CREDENTIALS_TYPE},GOOGLE_APPLICATION_CREDENTIALS_PROJECT_ID=${GOOGLE_APPLICATION_CREDENTIALS_PROJECT_ID},GOOGLE_APPLICATION_CREDENTIALS_PRIVATE_KEY_ID=${GOOGLE_APPLICATION_CREDENTIALS_PRIVATE_KEY_ID},GOOGLE_APPLICATION_CREDENTIALS_PRIVATE_KEY='${GOOGLE_APPLICATION_CREDENTIALS_PRIVATE_KEY}',GOOGLE_APPLICATION_CREDENTIALS_CLIENT_EMAIL=${GOOGLE_APPLICATION_CREDENTIALS_CLIENT_EMAIL},GOOGLE_APPLICATION_CREDENTIALS_CLIENT_ID=${GOOGLE_APPLICATION_CREDENTIALS_CLIENT_ID},GOOGLE_APPLICATION_CREDENTIALS_AUTH_URI=${GOOGLE_APPLICATION_CREDENTIALS_AUTH_URI},GOOGLE_APPLICATION_CREDENTIALS_TOKEN_URI=${GOOGLE_APPLICATION_CREDENTIALS_TOKEN_URI},GOOGLE_APPLICATION_CREDENTIALS_AUTH_PROVIDER=${GOOGLE_APPLICATION_CREDENTIALS_AUTH_PROVIDER},GOOGLE_APPLICATION_CREDENTIALS_CLIENT_CERT_URL=${GOOGLE_APPLICATION_CREDENTIALS_CLIENT_CERT_URL},GOOGLE_APPLICATION_CREDENTIALS_UNIVERSE_DOMAIN=${GOOGLE_APPLICATION_CREDENTIALS_UNIVERSE_DOMAIN},FONA_SERVICE_USER_PREFIX=${FONA_SERVICE_USER_PREFIX},FONA_SERVICE_FOOD_PREFIX=${FONA_SERVICE_FOOD_PREFIX},FONA_SERVICE_USER_URL=${FONA_SERVICE_USER_URL},FONA_SERVICE_FOOD_URL=${FONA_SERVICE_FOOD_URL},FONA_SERVICE_IDENTIFICATION_PREFIX=${FONA_SERVICE_IDENTIFICATION_PREFIX},FONA_SERVICE_IDENTIFICATION_URL=${FONA_SERVICE_IDENTIFICATION_URL}" \          --region="${{ secrets.SERVICE_REGION }}" \
+          --project="${{ secrets.PROJECT_ID_PROD }}"
+
+      - name: Update Cloud Run Traffic
+        env:
+          GOOGLE_PROJECT: ${{ secrets.PROJECT_ID_PROD }}
+        run: |
+          gcloud run services update-traffic ${{ secrets.SERVICE_NAME }} --region="${{ secrets.SERVICE_REGION }}" --to-latest
+
+      - name: Push to Discord Webhook
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK_URL }}
+        run: |
+          IFS=$' \t\r\n' curl -H "Content-Type: application/json" -X POST -d '{"username": "${{ secrets.DISCORD_WEBHOOK_USERNAME }}","avatar_url": "${{ secrets.DISCORD_WEBHOOK_AVATAR_URL }}","embeds": [{"title": "Service Deployed: '${{ secrets.SERVICE_NAME }}'","description": "Service '${{ secrets.SERVICE_NAME }}' has been updated to the latest revision\nTraffic has been routed to the latest revision\n\n**Project ID**: `'${{ secrets.PROJECT_ID_PROD }}'`\n**NODE_ENV**: `'${{ secrets.SERVICE_ENV_PROD }}'`\n**APP_HOST**: `'${{ secrets.SERVICE_HOST }}'`\n**APP_PORT**: `'${{ secrets.SERVICE_PORT }}'`\n**APP_PREFIX**: `'${{ secrets.SERVICE_PREFIX }}'`\n**DB_HOST**: `'${{ secrets.DB_HOST }}'`\n**DB_PORT**: `'${{ secrets.DB_PORT }}'`\n**DB_NAME**: `'${{ secrets.DB_NAME_PROD }}'`\n**DB_USER**: `'${{ secrets.DB_USER }}'`\n**REDIS_HOST**: `'${{ secrets.REDIS_HOST }}'`\n**REDIS_PORT**: `'${{ secrets.REDIS_PORT }}'`\n", "color": 65280}]}' '${{ secrets.DISCORD_WEBHOOK_URL }}'
