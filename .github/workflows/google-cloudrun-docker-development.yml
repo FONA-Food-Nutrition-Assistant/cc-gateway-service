@@ -1,4 +1,4 @@
-name: Production | Deploy Gateway Service to Cloud Run
+name: Development | Deploy Gateway Service to Cloud Run
 
 on:
   push:
